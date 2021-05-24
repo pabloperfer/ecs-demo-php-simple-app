@@ -1,22 +1,20 @@
-FROM public.ecr.aws/amazonlinux/amazonlinux:2
+FROM ubuntu:18.04
 
 # Install dependencies
-RUN yum install -y \
-    curl \
-    httpd \
-    php \
- && ln -s /usr/sbin/httpd /usr/sbin/apache2
+RUN apt-get update && \
+ apt-get -y install apache2
 
-# Install app
-RUN rm -rf /var/www/html/* && mkdir -p /var/www/html
-ADD src /var/www/html
+# Install apache and write hello world message
+RUN echo 'Hello World!' > /var/www/html/index.html
 
 # Configure apache
-RUN chown -R apache:apache /var/www
-ENV APACHE_RUN_USER apache
-ENV APACHE_RUN_GROUP apache
-ENV APACHE_LOG_DIR /var/log/apache2
+RUN echo '. /etc/apache2/envvars' > /root/run_apache.sh && \
+ echo 'mkdir -p /var/run/apache2' >> /root/run_apache.sh && \
+ echo 'mkdir -p /var/lock/apache2' >> /root/run_apache.sh && \ 
+ echo '/usr/sbin/apache2 -D FOREGROUND' >> /root/run_apache.sh && \ 
+ chmod 755 /root/run_apache.sh
 
 EXPOSE 80
 
-CMD ["/usr/sbin/apache2", "-D",  "FOREGROUND"]
+CMD /root/run_apache.sh
+
